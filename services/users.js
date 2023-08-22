@@ -48,11 +48,47 @@ async function deleteUser(uuid){
         queryString
     );
 }
+
+/* Get all matches data for specific userID */
+async function getMatches(page = 1, id){
+    const offset = helper.getOffset(page, config.listPerPage);
+    let queryString = `SELECT DISTINCT matchedUserID, userID FROM sys.Matches WHERE (userID = ${id});`
+    const rows = await db.query(
+        queryString
+    );
+    const data = helper.emptyOrRows(rows);
+    const meta = {page};
   
+    return {
+      data,
+      meta
+    }
+  }
+  
+  /* Add new match data, validate that it is not already in table*/
+  async function addMatch(body){
+    const result = await db.query(
+        `INSERT INTO sys.Matches (id, matchedUserID, userID)
+        SELECT NULL, ${body.matchedUserID}, ${body.userID}
+        FROM dual
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM sys.Matches
+            WHERE matchedUserID = ${body.matchedUserID} AND userID = ${body.userID}
+        );`
+    );
+    if (result.affectedRows > 0) {
+        console.log("POST of new match successful");
+    } else {
+        console.log("POST of new match failed due to duplicate row");
+    }
+}
 
 module.exports = {
   getUsers,
   getUser,
   addUser,
-  deleteUser
+  deleteUser,
+  getMatches,
+  addMatch
 }

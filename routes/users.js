@@ -46,4 +46,25 @@ router.post('/', async function(req, res, next) {
       }
   });
 
+/* GET matches for uuid */
+router.get('/:uuid/matches', async function(req, res, next) {
+    try {
+      res.json(await users.getMatches(req.query.page, req.params.uuid));
+      console.log(`GET of matches for user ${req.params.uuid} successful`)
+    } catch (err) {
+      console.error(`Error while getting matches for user ${req.params.uuid} `, err.message);
+      next(err);
+    }
+  });
+
+/* POST new match for uuid */
+router.post('/:uuid/matches', async function(req, res, next) {
+    try {
+        res.json(await users.addMatch(req.body));
+      } catch (err) {
+        console.error(`Error while setting match `, err.message);
+        next(err);
+      }
+  });
+
 module.exports = router;
