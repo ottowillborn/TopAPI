@@ -2,6 +2,13 @@ const db = require('./db');
 const helper = require('../helper');
 const config = require('../config');
 
+class validationError extends Error {
+    constructor(message) {
+      super("Error: " + message);
+      this.name = "ValidationError";
+    }
+  }
+
 async function getUsers(page = 1){
   const offset = helper.getOffset(page, config.listPerPage);
   const rows = await db.query(
@@ -36,7 +43,7 @@ async function getUser(page = 1, id){
 async function addUser(body){
     const result = await db.query(
         `INSERT INTO sys.Users
-         VALUES (${body.uuid},'${body.name}','${body.dob.slice(0,10)}',${body.elo});`
+         VALUES (${body.uuid},'${body.name}','${body.dob.slice(0,10)}','${body.elo}','${body.location}','${body.bio}');`
     );
 }
 
@@ -52,7 +59,7 @@ async function deleteUser(uuid){
 /* Get all matches data for specific userID */
 async function getMatches(page = 1, id){
     const offset = helper.getOffset(page, config.listPerPage);
-    let queryString = `SELECT DISTINCT matchedUserID, userID FROM sys.Matches WHERE (userID = ${id});`
+    let queryString = `SELECT * FROM sys.Matches WHERE (userID = ${id});`
     const rows = await db.query(
         queryString
     );
@@ -80,7 +87,7 @@ async function getMatches(page = 1, id){
     if (result.affectedRows > 0) {
         console.log("POST of new match successful");
     } else {
-        console.log("POST of new match failed due to duplicate row");
+        throw new validationError("Duplicate match being added");
     }
 }
 
